@@ -14,7 +14,6 @@ day1=3600*24
 hours=as.numeric(dt$fecha)-min(as.numeric(dt$fecha))
 hours/3600
 dtday=dt[,.(mean(no2)),by=day]
-dtday=dt[,.(mean(no2)),by=day]
 ggplot(dt[,.(mean(no2)),by=hour],aes(x=hour,y=V1))+geom_point()+geom_line()
 dt[,.(fecha-hour1)]
 dt[,.(fecha-day1)]

@@ -11,7 +11,7 @@ dataset[,year:=year(date)]
 dataset[,hour:=hour(date)]
 dataset[,day:=day(date)]
 dataset[,fecha:=as.Date(date)]
-dataset[hour==0 & day == 1 & month==1, fecha:=as.Date(date)+3600]
+dataset[hour==0 & day == 1 & month==1, fecha:=as.Date(date)]
 dataset$weekday <- weekdays(dataset$fecha)
 
 # Holidays
@@ -81,7 +81,7 @@ dt[,year:=year(date)]
 dt[,hour:=hour(date)]
 dt[,day:=day(date)]
 dt[,fecha:=as.Date(date)]
-dt[hour==0 & day == 1 & month==1, fecha:=as.Date(date)+3600]
+dt[hour==0 & day == 1 & month==1, fecha:=as.Date(date)]
 
 dt[,obs_hour:=shift(no2_2,1),by=id_station]
 dt[,obs_hour2:=shift(no2_2,2),by=id_station]

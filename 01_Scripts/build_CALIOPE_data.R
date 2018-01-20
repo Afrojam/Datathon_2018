@@ -49,7 +49,10 @@ setnames(DF_all2, "P1_sum", "P1")
 DF_all2[P0 ==0]$P0 <- NA
 DF_all2[P1 ==0]$P1 <- NA
 
+times=as.POSIXct("2013-01-01 00:00:00" )+(1:(365*3*24-1))*3600
+stat= unique(DF_all2$station)
+dat=expand.grid(stat,times)
+dt=merge(DF_all2,dat,by.x = c("station","date"),by.y = c("Var1","Var2"),all = TRUE)
 
-
-write.table(DF_all, "00_Dataset/model_data.csv")
+write.table(dt, "00_Dataset/model_data.csv")
 

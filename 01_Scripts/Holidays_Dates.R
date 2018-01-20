@@ -76,5 +76,5 @@ dataset[, ':='(
 
 
 
-write.csv(dataset, "00_Dataset/dataset_dates_holidays.csv", row.names=FALSE)
+write.table(dataset, "00_Dataset/dataset_dates_holidays.csv", row.names=FALSE, sep=";")
 

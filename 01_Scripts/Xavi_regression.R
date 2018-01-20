@@ -165,6 +165,17 @@ clf_reg_TOTAL <- xgboost(data = dm.train,
                      verbose = 1
 )  
 
-summary(predict(clf_reg_TOTAL, dm.train))
+probability_values <- (predict(clf_reg_TOTAL, dm.train))
+model2$prob_NO2 <- probability_values
 
+mod3 <- model2[, c("id_station", "year", "month", "day", "hour", "prob_NO2")]
+mod3[, fecha:= as.POSIXct(paste0(
+  year, ifelse(month < 10, "-0", "-"),
+  month, ifelse(day < 10, "-0", "-"),
+  day, ifelse(hour < 10, " 0", " "),
+  hour, ":00:00"))]
+
+mod3 <- merge(DF[,c("date", "id_station")], mod3, by.x=c("date", "id_station"), by.y=c("fecha", "id_station"), all.x=T)
+
+write.table(mod3[, c("fecha", "id_station", "prob_NO2")], "00_Dataset/xgb_2014.csv", sep=";")
 

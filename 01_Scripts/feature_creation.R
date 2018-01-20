@@ -126,6 +126,5 @@ ggplot(dt_aux,aes(hour,V1,col=id_station))+geom_point()+geom_line()
 targetobs=dt[,.(y=any(no2_2>100)*1),by=c("fecha","id_station")]
 
 dt <- merge(dt, targetobs, by.x=c("fecha","id_station"), by.y=c("fecha","id_station"), all.x=T)
-dt[year==2014 & is.na(pred_year)]
 write.table(dt, "00_Dataset/dataset_main.csv", row.names = FALSE, sep =";")
 

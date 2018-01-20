@@ -18,6 +18,13 @@ covariatesUse <- names(DF)[! names(DF) %in%  c(Y_name, exclude_names)]
 setDT(DF)
 
 
+#########################################################################
+# Feature Engineering
+
+DF[ , wday := as.POSIXlt(DF$date)$wday]
+
+stations <- unique(DF[, c("id_station", "lat", "lon")])
+
 compute_distance <- function(lat1, lon1, lat2, lon2) {
   R <- 6371
   
@@ -31,10 +38,34 @@ compute_distance <- function(lat1, lon1, lat2, lon2) {
   return(d)
 }
 
+cross_st <- as.data.table(t(combn(stations$id_station, 2)))
+setDT(cross_st)
+setnames(cross_st, "V1", "sta1") 
+setnames(cross_st, "V2", "sta2") 
+cross_st <- merge(cross_st, stations, by.x = "sta1", by.y="id_station", all.x=T)
+setnames(cross_st, "lat", "lat1")
+setnames(cross_st, "lon", "lon1")
+cross_st <- merge(cross_st, stations, by.x = "sta2", by.y="id_station", all.x=T)
+setnames(cross_st, "lat", "lat2")
+setnames(cross_st, "lon", "lon2")
+
+D <- c()
+for (i in 1:nrow(cross_st)) {
+  line <- cross_st[i,]
+  d <- compute_distance(as.numeric(line$lat1), 
+                        as.numeric(line$lon1),
+                        as.numeric(line$lat2),
+                        as.numeric(line$lon2))
+  D <- c(D, d)
+  
+}
+
+cross_st$dist <- D
+
 
 my_accuracy <- function(v_real, v_FC) {
   
-  V <- (log(v_FC)*v_real)/length(v_real)
+  V <- -(log(v_FC)*v_real)
   
   return (V)
 }
@@ -49,7 +80,7 @@ set.seed(1234)
 train <- copy(model2)
 input.variables <- covariatesUse
 # test.fold <- 1
-folds <- createFolds(train$no2, k = number.of.folds, list = T)
+folds <- createFolds(train[, get(Y_name)], k = number.of.folds, list = T)
 total.accuracy <- data.table()
 ACC <- c()
 for(test.fold in 1:number.of.folds) {
@@ -88,7 +119,7 @@ for(test.fold in 1:number.of.folds) {
                          real_value = test.data$is_high100,
                          prob_value = Y_pred, 
                          accuracy = acc_value)
-  s_acc <- sum(acc_value)
+  s_acc <- sum(acc_value)/length(acc_value)
   ACC <- c(ACC, s_acc)
   total.accuracy <- rbind(total.accuracy, accuracy)
   

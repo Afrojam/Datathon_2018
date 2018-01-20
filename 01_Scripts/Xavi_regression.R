@@ -142,7 +142,6 @@ for(test.fold in 1:number.of.folds) {
 print(ACC)
 summary(total.accuracy)
 
-
 training.data <- model2
 # The model.
 dm.train  <- xgb.DMatrix(data = data.matrix(training.data[,.SD, .SDcols = covariatesUse]),
@@ -151,7 +150,7 @@ set.seed(1234)
 clf_reg_TOTAL <- xgboost(data = dm.train,
                      nrounds = 1000,
                      booster = "gbtree",
-                     objective = "reg:linear",
+                     objective = "reg:logistic",
                      tree_method = "approx",
                      eta = 0.01,
                      nthread = 6,
@@ -166,5 +165,6 @@ clf_reg_TOTAL <- xgboost(data = dm.train,
                      verbose = 1
 )  
 
+summary(predict(clf_reg_TOTAL, dm.train))
 
 

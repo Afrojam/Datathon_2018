@@ -51,18 +51,30 @@ dataset$holidays <- ifelse(dataset$day == 6 & dataset$month == 4 & dataset$year 
 dataset$holidays <- ifelse(dataset$day == 1 & dataset$month == 6 & dataset$year == 2015, "Pentecostes", dataset$holidays)
 
 
-dataset$school <- ifelse(dataset$fecha >= "2013-01-08" & dataset$fecha <= "2013-03-22" & (dataset$weekday != "sábado" | dataset$weekday != "domingo"), 1, 0)
-dataset$school <- ifelse(dataset$fecha >= "2013-04-02" & dataset$fecha <= "2013-06-21" & (dataset$weekday != "sábado" | dataset$weekday != "domingo"), 1, dataset$school)
+dataset$school <- ifelse(dataset$fecha >= "2013-01-08" & dataset$fecha <= "2013-03-22" & !(dataset$weekday  %in% c("sábado", "domingo")), 1, 0)
+dataset$school <- ifelse(dataset$fecha >= "2013-04-02" & dataset$fecha <= "2013-06-21" & !(dataset$weekday  %in% c("sábado", "domingo")), 1, dataset$school)
 
-dataset$school <- ifelse(dataset$fecha >= "2013-09-12" & dataset$fecha <= "2013-12-20" & (dataset$weekday != "sábado" | dataset$weekday != "domingo"), 1, dataset$school)
-dataset$school <- ifelse(dataset$fecha >= "2014-01-08" & dataset$fecha <= "2014-04-11" & (dataset$weekday != "sábado" | dataset$weekday != "domingo"), 1, dataset$school)
-dataset$school <- ifelse(dataset$fecha >= "2014-04-22" & dataset$fecha <= "2014-06-20" & (dataset$weekday != "sábado" | dataset$weekday != "domingo"), 1, dataset$school)
+dataset$school <- ifelse(dataset$fecha >= "2013-09-12" & dataset$fecha <= "2013-12-20" & !(dataset$weekday  %in% c("sábado", "domingo")), 1, dataset$school)
+dataset$school <- ifelse(dataset$fecha >= "2014-01-08" & dataset$fecha <= "2014-04-11" & !(dataset$weekday  %in% c("sábado", "domingo")), 1, dataset$school)
+dataset$school <- ifelse(dataset$fecha >= "2014-04-22" & dataset$fecha <= "2014-06-20" & !(dataset$weekday  %in% c("sábado", "domingo")), 1, dataset$school)
 
 
-dataset$school <- ifelse(dataset$fecha >= "2014-09-15" & dataset$fecha <= "2014-12-23" & (dataset$weekday != "sábado" | dataset$weekday != "domingo"), 1, dataset$school)
-dataset$school <- ifelse(dataset$fecha >= "2015-01-08" & dataset$fecha <= "2015-03-27" & (dataset$weekday != "sábado" | dataset$weekday != "domingo"), 1, dataset$school)
-dataset$school <- ifelse(dataset$fecha >= "2015-04-07" & dataset$fecha <= "2015-06-19" & (dataset$weekday != "sábado" | dataset$weekday != "domingo"), 1, dataset$school)
+dataset$school <- ifelse(dataset$fecha >= "2014-09-15" & dataset$fecha <= "2014-12-23" & !(dataset$weekday  %in% c("sábado", "domingo")), 1, dataset$school)
+dataset$school <- ifelse(dataset$fecha >= "2015-01-08" & dataset$fecha <= "2015-03-27" & !(dataset$weekday  %in% c("sábado", "domingo")), 1, dataset$school)
+dataset$school <- ifelse(dataset$fecha >= "2015-04-07" & dataset$fecha <= "2015-06-19" & !(dataset$weekday  %in% c("sábado", "domingo")), 1, dataset$school)
 
-dataset$school <- ifelse(dataset$fecha >= "2015-09-14" & dataset$fecha <= "2015-12-22" & (dataset$weekday != "sábado" | dataset$weekday != "domingo"), 1, dataset$school)
+dataset$school <- ifelse(dataset$fecha >= "2015-09-14" & dataset$fecha <= "2015-12-22" & !(dataset$weekday  %in% c("sábado", "domingo")), 1, dataset$school)
+
+setDT(dataset)
+dataset[, ':='(
+  wday = as.POSIXlt(date)$wday,
+  day = as.numeric(substr(date, 9,10)),
+  year_day = as.POSIXlt(date)$yday+1,
+  week_num = as.numeric(strftime(date,format="%W")),
+  holidays_dummy = ifelse(holidays == "Normal", 0, 1)
+)]
+
+
 
 write.csv(dataset, "00_Dataset/dataset_dates_holidays.csv", row.names=FALSE)
+

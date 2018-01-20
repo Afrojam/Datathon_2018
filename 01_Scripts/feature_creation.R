@@ -11,6 +11,7 @@ dataset[,year:=year(date)]
 dataset[,hour:=hour(date)]
 dataset[,day:=day(date)]
 dataset[,fecha:=as.Date(date)]
+dataset[hour==0 & day == 1 & month==1, fecha:=as.Date(date)+3600]
 dataset$weekday <- weekdays(dataset$fecha)
 
 # Holidays
@@ -80,19 +81,20 @@ dt[,year:=year(date)]
 dt[,hour:=hour(date)]
 dt[,day:=day(date)]
 dt[,fecha:=as.Date(date)]
+dt[hour==0 & day == 1 & month==1, fecha:=as.Date(date)+3600]
 
 dt[,obs_hour:=shift(no2_2,1),by=id_station]
 dt[,obs_hour2:=shift(no2_2,2),by=id_station]
 dt[,obs_day:=shift(no2_2,1),by=c("id_station","hour")]
-dt[,obs_year:=shift(no2_2,1),by=c("id_station","year")]
+dt[,obs_year:=shift(no2_2,1),by=c("id_station","year_day")]
 dt[,pred_hour:=shift(FC_T_2,1),by=id_station]
 dt[,pred_hour2:=shift(FC_T_2,2),by=id_station]
 dt[,pred_day:=shift(FC_T_2,1),by=c("id_station","hour")]
-dt[,pred_year:=shift(FC_T_2,1),by=c("id_station","year")]
+dt[,pred_year:=shift(FC_T_2,1),by=c("id_station","year_day")]
 dt[,pred_Yhour:=shift(FC_Y_2,1),by=id_station]
 dt[,pred_Yhour2:=shift(FC_Y_2,2),by=id_station]
 dt[,pred_Yday:=shift(FC_Y_2,1),by=c("id_station","hour")]
-dt[,pred_Yyear:=shift(FC_Y_2,1),by=c("id_station","year")]
+dt[,pred_Yyear:=shift(FC_Y_2,1),by=c("id_station","year_day")]
 
 
 dt2 <- dt[, list(
@@ -121,10 +123,9 @@ dt <- merge(dt, dt2, by.x = c("id_station", "fecha"), by.y = c("id_station", "fe
 dt_aux=dt[,.(mean(no2_2, na.rm=T)),by=c("hour","id_station")]
 ggplot(dt_aux,aes(hour,V1,col=id_station))+geom_point()+geom_line()
 
-dt[,fecha:=as.Date(date)]
 targetobs=dt[,.(y=any(no2_2>100)*1),by=c("fecha","id_station")]
 
 dt <- merge(dt, targetobs, by.x=c("fecha","id_station"), by.y=c("fecha","id_station"), all.x=T)
-
+dt[year==2014 & is.na(pred_year)]
 write.table(dt, "00_Dataset/dataset_main.csv", row.names = FALSE, sep =";")
 

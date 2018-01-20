@@ -54,5 +54,5 @@ stat= unique(DF_all2$station)
 dat=expand.grid(stat,times)
 dt=merge(DF_all2,dat,by.x = c("station","date"),by.y = c("Var1","Var2"),all = TRUE)
 
-write.table(dt, "00_Dataset/caliope_data.csv")
+write.table(dt, "00_Dataset/caliope_data.csv", row.names = FALSE, sep=";")
 

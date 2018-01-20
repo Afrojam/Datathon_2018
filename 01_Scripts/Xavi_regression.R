@@ -9,11 +9,11 @@ library(caret)
 DF <- fread("00_Dataset/dataset_main.csv", sep=";")
 
 DF <- DF[year %in% c(2013, 2014)]
-# DF[,is_high100 := ifelse(no2_2 > 100, 1, 0)]
+DF[,is_high100 := ifelse(no2_2 > 100, 1, 0)]
 DF$id_station <- as.factor(DF$id_station)
 
-Y_name <- "no2_2"
-exclude_names <- c("fecha", "date","no2", "FC_today", "FC_yesterday", "date", "weekday", "Date", "holidays", "y")
+Y_name <- "is_high100"
+exclude_names <- c("fecha", "date","no2", "FC_today", "FC_yesterday", "date", "weekday", "Date", "holidays", "y", "no2_2")
 
 setDT(DF)
 
@@ -64,7 +64,7 @@ cross_st$dist <- D
 
 my_accuracy <- function(v_real, v_FC) {
   
-  V <- -(log(v_FC)*v_real)
+  V <- -(log(v_FC)*(1-v_real)+(v_real)*log(1-v_FC))
   
   return (V)
 }
@@ -104,7 +104,7 @@ for(test.fold in 1:number.of.folds) {
   clf <- xgboost(data = dm.train,
                  nrounds = 1000,
                  booster = "gbtree",
-                 objective = "reg:linear",
+                 objective = "reg:logistic",
                  tree_method = "approx",
                  eta = 0.01,
                  nthread = 6,
@@ -119,11 +119,11 @@ for(test.fold in 1:number.of.folds) {
                  verbose = 1
   )  
   
-  name_clf <- paste0("clf_", test.fold)
+  name_clf <- paste0("clf_reg_", test.fold)
   assign(name_clf, clf)
   # Compute prediction.
-  Y_pred <- predict(clf, dm.test)
-  acc_value <- MAPE_accuracy(test.data[,get(Y_name)], Y_pred)
+  Y_pred <- predict(get(name_clf), dm.test)
+  acc_value <- my_accuracy(test.data[,get(Y_name)], Y_pred)
   accuracy <- data.table(Fold = test.fold, 
                          id_estacion = test.data$id_station, 
                          real_value = test.data[, get(Y_name)],
@@ -148,22 +148,22 @@ training.data <- model2
 dm.train  <- xgb.DMatrix(data = data.matrix(training.data[,.SD, .SDcols = covariatesUse]),
                          label = training.data[, get(Y_name)], missing = NA)
 set.seed(1234)
-clf_TOTAL <- xgboost(data = dm.train,
-               nrounds = 1000,
-               booster = "gbtree",
-               objective = "reg:linear",
-               tree_method = "approx",
-               eta = 0.01,
-               nthread = 6,
-               max_depth =15,
-               subsample = 0.95, 
-               colsample_bytree = 0.95, 
-               min_child_weight = 1,
-               gamma = 0.0,
-               #watchlist = watchlist, 
-               #early.stop.round = 50, 
-               maximize = T,
-               verbose = 1
+clf_reg_TOTAL <- xgboost(data = dm.train,
+                     nrounds = 1000,
+                     booster = "gbtree",
+                     objective = "reg:linear",
+                     tree_method = "approx",
+                     eta = 0.01,
+                     nthread = 6,
+                     max_depth =15,
+                     subsample = 0.95, 
+                     colsample_bytree = 0.95, 
+                     min_child_weight = 1,
+                     gamma = 0.0,
+                     #watchlist = watchlist, 
+                     #early.stop.round = 50, 
+                     maximize = T,
+                     verbose = 1
 )  
 
 

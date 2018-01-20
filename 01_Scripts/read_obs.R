@@ -33,4 +33,4 @@ dt=merge(dt,stations,by.x="id_station",by.y = "code")
 dt[,date:=as.POSIXct(date)]
 # fwrite(dt,"00_Dataset/obs_complete.csv")
 write.table(dt, "00_Dataset/obs_complete.csv", row.names = FALSE, sep=";")
-data[is.na(no2)]
+

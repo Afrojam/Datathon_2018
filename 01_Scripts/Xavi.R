@@ -6,12 +6,15 @@ library(xgboost)
 library(data.table)
 library(caret)
 
-DF <- read.csv("C:/Users/xavier.ros.roca/Desktop/Datathon_2018/00_Dataset/madrid_data.csv", sep=";")
-DF$fecha <- as.POSIXct(DF$fecha, format="%d/%m/%Y %H:%M")
+DF <- fread("00_Dataset/dataset.csv", sep=";")
 
-Y_name <- "no2"
+DF <- DF[year %in% c(2013, 2014)]
+DF[,is_high100 := ifelse(no2_2 > 100, 1, 0)]
 
-covariatesUse <- names(DF)[names(DF) != Y_name]
+Y_name <- "is_high100"
+exclude_names <- c("no2", "no2_2")
+
+covariatesUse <- names(DF)[! names(DF) %in%  c(Y_name, exclude_names)]
 setDT(DF)
 
 
@@ -30,7 +33,10 @@ compute_distance <- function(lat1, lon1, lat2, lon2) {
 
 
 my_accuracy <- function(v_real, v_FC) {
-  return (sqrt(sum((v_real-v_FC)^2/length(v_real))))
+  
+  V <- (log(v_FC)*v_real)/length(v_real)
+  
+  return (V)
 }
 
 
@@ -53,14 +59,14 @@ for(test.fold in 1:number.of.folds) {
   test.data <- train[ folds[[test.fold]], ]
   # The model.
   dm.train  <- xgb.DMatrix(data = data.matrix(training.data[,.SD, .SDcols = (names(training.data) %in% c(input.variables))]),
-                           label = training.data$no2, missing = NA)
+                           label = training.data[, get(Y_name)], missing = NA)
   dm.test  <- xgb.DMatrix(data = data.matrix(test.data[,.SD, .SDcols = (names(test.data) %in% c(input.variables))]),
-                          label = test.data$no2, missing = NA)
+                          label = test.data[, get(Y_name)], missing = NA)
   set.seed(1234)
   clf <- xgboost(data = dm.train,
                  nrounds = 900,
                  booster = "gbtree",
-                 objective = "reg:linear",
+                 objective = "binary:logistic",
                  tree_method = "approx",
                  eta = 0.01,
                  nthread = 6,
@@ -75,14 +81,15 @@ for(test.fold in 1:number.of.folds) {
                  verbose = 1
   )  
   # Compute prediction.
-  FC_no2 <- predict(clf, dm.test)
-  acc_value <- my_accuracy(test.data$no2, FC_no2)
+  Y_pred <- predict(clf, dm.test)
+  acc_value <- my_accuracy(test.data[,get(Y_name)], Y_pred)
   accuracy <- data.table(Fold = test.fold, 
-                         id_estacion = test.data$id_estacion, 
-                         no2 = test.data$no2,
-                         FC_no2 = FC_no2, 
+                         id_estacion = test.data$id_station, 
+                         real_value = test.data$is_high100,
+                         prob_value = Y_pred, 
                          accuracy = acc_value)
-  ACC <- c(ACC, acc_value)
+  s_acc <- sum(acc_value)
+  ACC <- c(ACC, s_acc)
   total.accuracy <- rbind(total.accuracy, accuracy)
   
 }

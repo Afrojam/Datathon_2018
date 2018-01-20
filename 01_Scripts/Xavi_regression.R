@@ -12,7 +12,7 @@ DF <- DF[year %in% c(2013, 2014)]
 DF[,is_high100 := ifelse(no2_2 > 100, 1, 0)]
 DF$id_station <- as.factor(DF$id_station)
 
-Y_name <- "is_high100"
+Y_name <- "no2_2"
 exclude_names <- c("fecha", "date","no2", "FC_today", "FC_yesterday", "date", "weekday", "Date", "holidays", "y", "no2_2")
 
 setDT(DF)
@@ -77,7 +77,10 @@ MAPE_accuracy <- function(v_real, v_FC) {
 }
 
 covariatesUse <- names(DF)[! names(DF) %in%  c(Y_name, exclude_names)]
+covariatesUse_hourly <- covariatesUse
+Y_name_hourly <- Y_name
 fit <- as.formula(paste(Y_name, "~", paste(covariatesUse, collapse = "+")))
+fit_hourly <- fit
 model2 <- DF[complete.cases(DF[, .SD, .SDcols = c(covariatesUse)])]
 model2 <- model2[, c(covariatesUse, Y_name), with=FALSE]
 

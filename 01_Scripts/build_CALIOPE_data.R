@@ -43,11 +43,11 @@ DF_all2 <- DF_all[, list(
   P1_sum = sum(P1, na.rm = T)
 ), by = c("lat", "long", "date", "station")]
 
-setnames(DF_all2, "P0_sum", "P0")
-setnames(DF_all2, "P1_sum", "P1")
+setnames(DF_all2, "P0_sum", "FC_today")
+setnames(DF_all2, "P1_sum", "FC_yesterday")
 
-DF_all2[P0 ==0]$P0 <- NA
-DF_all2[P1 ==0]$P1 <- NA
+DF_all2[FC_today == 0]$FC_today <- NA
+DF_all2[FC_yesterday ==0]$FC_yesterday <- NA
 
 times=as.POSIXct("2013-01-01 00:00:00" )+(1:(365*3*24-1))*3600
 stat= unique(DF_all2$station)

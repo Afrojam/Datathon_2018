@@ -12,7 +12,7 @@ DF <- DF[year %in% c(2013, 2014)]
 DF[,is_high100 := ifelse(no2_2 > 100, 1, 0)]
 
 Y_name <- "is_high100"
-exclude_names <- c("no2", "no2_2")
+exclude_names <- c("no2", "no2_2", "FC_today", "FC_yesterday")
 
 covariatesUse <- names(DF)[! names(DF) %in%  c(Y_name, exclude_names)]
 setDT(DF)
@@ -21,6 +21,7 @@ setDT(DF)
 #########################################################################
 # Feature Engineering
 
+# Dia de la setmana
 DF[ , wday := as.POSIXlt(DF$date)$wday]
 
 stations <- unique(DF[, c("id_station", "lat", "lon")])
@@ -73,6 +74,7 @@ my_accuracy <- function(v_real, v_FC) {
 
 fit <- as.formula(paste(Y_name, "~", paste(covariatesUse, collapse = "+")))
 model2 <- DF[complete.cases(DF[, .SD, .SDcols = c(covariatesUse)])]
+model2 <- model2[, c(covariatesUse, Y_name), with=FALSE]
 
 # Perform a cross-validation.
 number.of.folds <- 5

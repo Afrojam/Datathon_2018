@@ -1,4 +1,4 @@
-setwd("~/Desktop/Datathon_2018")
+
 library(data.table)
 library(ggplot2)
 library(lubridate)
@@ -12,9 +12,9 @@ dt_cal <- dt_cal[, c("station", "date", "FC_today", "FC_yesterday")]
 
 dt <- merge(dt_obs, dt_cal, by.x = c("id_station", "date"), by.y= c("station", "date"), all=T)
 dt=dt[order(id_station, date)]
-dt[date<"2015-01-01 00:00:00", no2_2:=na.interpolation(no2, option = "spline")]
-dt[date<"2015-01-01 00:00:00", FC_T_2:=na.interpolation(FC_today, option = "spline")]
-dt[date<"2015-01-01 00:00:00", FC_Y_2:=na.interpolation(FC_yesterday, option = "spline")]
+dt[date<"2015-01-01 00:00:00", no2_2:=na.interpolation(no2)]
+dt[date<"2015-01-01 00:00:00", FC_T_2:=na.interpolation(FC_today)]
+dt[date<"2015-01-01 00:00:00", FC_Y_2:=na.interpolation(FC_yesterday)]
 dt <- dt[!is.na(height)]
 
 write.table(dt, "00_Dataset/dataset.csv", row.names = FALSE, sep=";")

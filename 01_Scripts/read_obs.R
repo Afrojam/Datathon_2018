@@ -30,6 +30,7 @@ dt[,hour:=hour(date)]
 
 stations=fread("stations.csv")[,c(1,3,4,5)]
 dt=merge(dt,stations,by.x="id_station",by.y = "code")
+dt[,date:=as.POSIXct(date)]
 fwrite(dt,"00_Dataset/obs_complete.csv")
 
 data[is.na(no2)]

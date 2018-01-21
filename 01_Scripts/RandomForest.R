@@ -30,7 +30,7 @@ control <- trainControl(method="cv",
 
 seed <- 7
 metric <- "RMSE"
-tunegrid <- expand.grid(.mtry=c(10,20))
+tunegrid <- expand.grid(.mtry=c(10,15))
 rf_default <- train(no2_2~.,
                     data=dataset,
                     method="rf",
@@ -44,8 +44,7 @@ dataset[,y:=ifelse(no2_2>100,1,0)]
 dataset[,y:=factor(y, levels = c(0,1), labels = c("no", "yes"))]
 metric <- "ROC"
 tunegrid <- expand.grid(.mtry=c(15))
-control <- trainControl(method = "cv",
-                     number = 2,
+control <- trainControl(method = "none",
                      summaryFunction = twoClassSummary,
                      classProbs = TRUE,
                      verboseIter = TRUE,

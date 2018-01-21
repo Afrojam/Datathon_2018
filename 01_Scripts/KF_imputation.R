@@ -69,7 +69,7 @@ for (i in stations){
   nrow(y)
   
   View(cbind(y,smo1))
-
+  
 }
 
 

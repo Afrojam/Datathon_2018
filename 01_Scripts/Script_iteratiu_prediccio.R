@@ -8,6 +8,22 @@ DF_h$date <- as.Date(DF_h$fecha)
 DF_h$id_station <- as.factor(DF_h$id_station)
 DF_h[, y:= ifelse(col_count>0, 1, 0)]
 
+for(j in c(as.character(0:23), "col_count", "max", "means", "mins", "medians", "y") ){
+  name_j <- paste0(j, "_Y")
+  DF_h[,obs_hour:=shift(get(j),1),by=id_station]
+  setnames(DF_h, "obs_hour", name_j)
+  
+  name_j <- paste0(j, "_Y2")
+  DF_h[,obs_hour:=shift(get(j),2),by=id_station]
+  setnames(DF_h, "obs_hour", name_j)
+  
+  # name_j <- paste0(j, "_Y3")
+  # DF_h[,obs_hour:=shift(get(j),3),by=id_station]
+  # setnames(DF_h, "obs_hour", name_j)
+}
+
+
+
 DF <- fread("00_Dataset/dataset_main.csv", sep=";")
 DF$date <- as.Date(DF$date)
 DF$fecha <- NULL
@@ -31,6 +47,17 @@ DF2 <- DF[, list(
 ),
 by = c("id_station", "date")]
 
+
+
+A <- dcast(DF, date+id_station ~ hour, fun=sum,value.var="FC_today")
+names(A)[3:26] <- paste0(names(A)[3:26], "_CAL_T")
+
+
+B <- dcast(DF, date+id_station ~ hour, fun=sum,value.var="FC_today")
+names(B)[3:26] <- paste0(names(B)[3:26], "_CAL_T2")
+
+
+
 DF_perhour <- DF
 
 DF_covariates <- unique(DF[, c("date", "id_station", "month", "year", "lat", "lon", 
@@ -39,8 +66,13 @@ DF_covariates <- unique(DF[, c("date", "id_station", "month", "year", "lat", "lo
 
 DF_all <- merge(DF_h, DF_covariates, by.x=c("id_station", "date"), by.y=c("id_station", "date"))
 
+DF_all <- merge(DF_all, A, by.x=c("id_station", "date"), by.y=c("id_station", "date"))
+DF_all <- merge(DF_all, B, by.x=c("id_station", "date"), by.y=c("id_station", "date"))
+
+
 Y_name <- "y"
-exclude_names <- c("fecha", "date","no2", "FC_today", "FC_yesterday", "date", "weekday", "Date", "holidays", "y", "no2_2")
+exclude_names <- c("col_count","fecha", "date","no2", "FC_today", "FC_yesterday", "date", "weekday", "Date", "holidays", "y", "no2_2",
+                   "max", "means", "mins", "medians", as.character(0:23))
 
 #####
 
@@ -62,7 +94,7 @@ MAPE_accuracy <- function(v_real, v_FC) {
 DF <- DF_all
 DF$id_station <- as.factor(DF$id_station)
 covariatesUse <- names(DF)[! names(DF) %in%  c(Y_name, exclude_names)]
-fit <- as.formula(paste(Y_name, "~", paste(covariatesUse, collapse = "+")))
+# fit <- as.formula(paste(Y_name, "~", paste(covariatesUse, collapse = "+")))
 model2 <- DF[complete.cases(DF[, .SD, .SDcols = c(covariatesUse)])]
 model2 <- model2[, c(covariatesUse, Y_name), with=FALSE]
 model2 <- model2[year %in% c(2013,2014)]
@@ -119,8 +151,8 @@ for(test.fold in 1:number.of.folds) {
   ACC <- c(ACC, s_acc)
   total.accuracy <- rbind(total.accuracy, accuracy)
   
-  # mat <- xgb.importance (feature_names = covariatesUse, model = clf)
-  # xgb.plot.importance (importance_matrix = mat[1:20])
+  mat <- xgb.importance (feature_names = covariatesUse, model = clf)
+  xgb.plot.importance (importance_matrix = mat[1:20])
   
 }
 
@@ -153,7 +185,8 @@ clf <- xgboost(data = dm.train,
 name_clf <- ("xgb_fin_reg_TOTAL")
 assign(name_clf, clf)
 
-
+mat <- xgb.importance (feature_names = covariatesUse, model = clf)
+xgb.plot.importance (importance_matrix = mat[1:20])
 
 #########################
 
@@ -163,7 +196,7 @@ targets <- targets[,date := as.Date(date)]
 days_to_predict <- unique(as.character(targets$date))
 DF_perhour$id_station <- as.factor(DF_perhour$id_station)
 covariatesUse_hourly <- covariatesUse_hourly[1:(length(covariatesUse_hourly)-1)]
-
+Y_name_hourly <- "no2_2"
 
 target_xgb <- data.table()
 for(i in days_to_predict){
@@ -180,8 +213,7 @@ for(i in days_to_predict){
   DF_today <- DF_available[date==i]
   DF_other <- DF_available[date!=i]
   
-  DF_today2 <- merge(DF_today[, c("id_station", "date",     "fecha","col_count","y", "month",  
-               "year","lat", "lon", "height",  "day", "school", "wday","year_day" ,"week_num","holidays_dummy")],
+  DF_today2 <- merge(DF_today[, ! as.character(0:23)],
         values, by.x =c("id_station", "date"), by.y=c("id_station", "date")) 
   
   DF_ava2 <- DF_today2
@@ -201,6 +233,7 @@ for(i in days_to_predict){
 }
 
 to_deliver_xgb <- merge(targets[,c("date", "station")], target_xgb, by.x=c("date", "station"), by.y =c("date", "id_station"), all.x=T)
+to_deliver_xgb <- to_deliver_xgb[, c("target")]
 
-write.table(to_deliver_xgb, "02_Submissions/xgb_to_deliver.csv", sep=",", row.names = F)
+write.table(to_deliver_xgb, "02_Submissions/xgb_to_deliver5.csv", sep=",", row.names = F)
 

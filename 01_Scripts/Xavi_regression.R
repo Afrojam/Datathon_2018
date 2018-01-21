@@ -8,11 +8,12 @@ library(caret)
 
 DF <- fread("00_Dataset/dataset_main.csv", sep=";")
 
-DF <- DF[year %in% c(2013, 2014)]
+DF <- DF[year %in% c(2013, 2014, 2015)]
 DF[,is_high100 := ifelse(no2_2 > 100, 1, 0)]
 DF$id_station <- as.factor(DF$id_station)
 
-Y_name <- "no2_2"
+
+Y_name <- "is_high100"
 exclude_names <- c("fecha", "date","no2", "FC_today", "FC_yesterday", "date", "weekday", "Date", "holidays", "y", "no2_2")
 
 setDT(DF)
@@ -145,28 +146,29 @@ for(test.fold in 1:number.of.folds) {
 print(ACC)
 summary(total.accuracy)
 
+model2 <- model2[year==2015]
 training.data <- model2
 # The model.
-dm.train  <- xgb.DMatrix(data = data.matrix(training.data[,.SD, .SDcols = covariatesUse]),
-                         label = training.data[, get(Y_name)], missing = NA)
+dm.train  <- xgb.DMatrix(data = data.matrix(training.data[,.SD, .SDcols = covariatesUse_hourly]),
+                         label = training.data[, get(Y_name_hourly)], missing = NA)
 set.seed(1234)
-clf_reg_TOTAL <- xgboost(data = dm.train,
-                     nrounds = 1000,
-                     booster = "gbtree",
-                     objective = "reg:logistic",
-                     tree_method = "approx",
-                     eta = 0.01,
-                     nthread = 6,
-                     max_depth =15,
-                     subsample = 0.95, 
-                     colsample_bytree = 0.95, 
-                     min_child_weight = 1,
-                     gamma = 0.0,
-                     #watchlist = watchlist, 
-                     #early.stop.round = 50, 
-                     maximize = T,
-                     verbose = 1
-)  
+# clf_reg_TOTAL <- xgboost(data = dm.train,
+#                      nrounds = 1000,
+#                      booster = "gbtree",
+#                      objective = "reg:prob",
+#                      tree_method = "approx",
+#                      eta = 0.01,
+#                      nthread = 6,
+#                      max_depth =15,
+#                      subsample = 0.95, 
+#                      colsample_bytree = 0.95, 
+#                      min_child_weight = 1,
+#                      gamma = 0.0,
+#                      #watchlist = watchlist, 
+#                      #early.stop.round = 50, 
+#                      maximize = T,
+#                      verbose = 1
+# )  
 
 probability_values <- (predict(clf_reg_TOTAL, dm.train))
 model2$prob_NO2 <- probability_values
@@ -178,7 +180,10 @@ mod3[, fecha:= as.POSIXct(paste0(
   day, ifelse(hour < 10, " 0", " "),
   hour, ":00:00"))]
 
+DF$date <- as.POSIXct(DF$date)
 mod3 <- merge(DF[,c("date", "id_station")], mod3, by.x=c("date", "id_station"), by.y=c("fecha", "id_station"), all.x=T)
+mod3 <- mod3[substr(date, 1, 4) ==2015]
+summary(mod3)
+write.table(mod3[, c("date", "id_station", "prob_NO2")], "00_Dataset/xgb_2015_probsNO2.csv", sep=";")
 
-write.table(mod3[, c("fecha", "id_station", "prob_NO2")], "00_Dataset/xgb_2014.csv", sep=";")
 

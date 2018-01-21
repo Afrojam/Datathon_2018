@@ -1,4 +1,10 @@
-.Rproj.user
+*.Rproj.user
+*.Rhistory
+*.RData
+*.Ruserdata
+*.rdata
 .Rhistory
-.RData
-.Ruserdata
+*.model
+Rproj.user.*
+00_Dataset*
+*.csv

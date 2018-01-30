@@ -1,20 +1,19 @@
 # Datathon_2018
 Datathon Contaminació Barcelona CCCB 2018
 
-## Tasques
-* Codi per a la submission
+## What we did
+* Data Transformation Code
+* Submission Script
 * Exploratory Analysis
-  * Codi per veure les dades en format serie per estacions
-  * Tableau per veure localitzacions
-  * ...
+  * Statistical Analysis
+  * Tableau Visualization
 * Models
   * ARIMA
-  * Linear Model
+  * Linear and Logistic Model
   * Random Forest
   * SVM
   * xgboost
-  * Neural Network
-  * ...
+
  
 
   

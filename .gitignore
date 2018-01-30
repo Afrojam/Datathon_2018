@@ -6,5 +6,6 @@
 .Rhistory
 *.model
 Rproj.user.*
-00_Dataset*
+00_Dataset/*
 *.csv
+.Rproj.user
